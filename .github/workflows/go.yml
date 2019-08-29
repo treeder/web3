@@ -32,6 +32,8 @@ jobs:
       run: go build -o web3_mac ./cmd/web3
       
     - name: release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         version=TEST
         url='https://api.github.com/repos/gochain/web3/releases'

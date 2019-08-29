@@ -1,0 +1,40 @@
+name: Go
+on: [push]
+push:
+  branches:
+    - master
+jobs:
+
+  build:
+    name: Build
+    runs-on: macOS-latest
+    steps:
+
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+#     - name: Get dependencies
+#       run: |
+#         go get -v -t -d ./...
+#         if [ -f Gopkg.toml ]; then
+#             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+#             dep ensure
+#         fi
+
+    - name: Build
+      run: go build -o web3_mac ./cmd/web3
+      
+    - name: release
+      run: |
+        version=TEST
+        url='https://api.github.com/repos/gochain/web3/releases'
+        output=$(curl -s -u $GITHUB_TOKEN -d "{\"tag_name\": \"v$version\", \"name\": \"v$version\"}" $url)
+        upload_url=$(echo "$output" | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["upload_url"]' | sed -E "s/\{.*//")
+        html_url=$(echo "$output" | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["html_url"]')
+        curl --data-binary "@web3_mac"  -H "Content-Type: application/octet-stream" -u $GITHUB_TOKEN $upload_url\?name\=web3_linux >/dev/null
